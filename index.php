@@ -52,7 +52,7 @@
     <script src="js/all.min.js"></script>
     <title>Safe-cracking</title>
 </head>
-<body>
+<body data-result="<?=$_SESSION['result'][$id_safe]?>">
     <div class="container">
         <h1>Kllaster - Safe-cracking</h1>
 		<? if (!empty($error)): ?>

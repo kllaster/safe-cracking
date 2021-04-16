@@ -40,7 +40,7 @@ class DB_Attempt extends DataBase
 		$insert->bindParam(':safe_box', $safe_box);
 		$insert->bindParam(':result', $result);
 		$insert->bindParam(':session_id', $sid);
-		return $insert->execute();
+		return ($insert->execute());
 	}
 
 	function check_pin(string $pin, int $safe_box): bool
@@ -54,6 +54,20 @@ class DB_Attempt extends DataBase
 		$select->bindParam(':safe_box', $safe_box);
 		$select->bindParam(':session_id', $sid);
 		$select->execute();
-		return (bool)$select->fetchAll();
+		return (bool)($select->fetchAll());
+	}
+
+	function get_object_result(string $pin, int $safe_box): int
+	{
+		if (empty($sid = session_id()))
+			return false;
+		$select = self::$db->prepare("SELECT `object` FROM `attempt_pins`
+											WHERE `safe_box` = :safe_box AND `pin` = :pin AND 
+											      `session_id` = :session_id;");
+		$select->bindParam(':pin', $pin);
+		$select->bindParam(':safe_box', $safe_box);
+		$select->bindParam(':session_id', $sid);
+		$select->execute();
+		return (int)($select->fetchAll()[0]['object']);
 	}
 }

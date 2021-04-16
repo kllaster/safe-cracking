@@ -1,5 +1,6 @@
 window.result = null;
 $(function () {
+	window.result = $('body').data('result');
 	setInterval(function () {
 		$('.objects_try__item_lock').each(function() {
 			let time = parseInt($(this).children('span').text().slice(0, -2));
@@ -82,13 +83,15 @@ $(function () {
 					}
 					if (!!response.pin)
 					{
-						if (response.result)
+						if (!!window.result)
+							return ;
+						if (!!response.result)
 						{
 							window.result = response.pin;
 							$('h1').after("<div class=\"message\">The PIN came up: "+response.pin+"</div>")
 						}
 						$('.log_attempt').prepend("<div class=\"log_attempt__item\">\n" +
-							"<div>Object #"+object+"</div>\n" +
+							"<div>Object #"+response.object+"</div>\n" +
 							"<div>PIN: "+response.pin+"</div>\n" +
 							"<div>"+(response.result ? 'Success, the PIN came up!' : 'PIN didn\'t fit')+"</div>\n" +
 							"</div>");

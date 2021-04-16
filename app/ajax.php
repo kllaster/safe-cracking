@@ -15,11 +15,23 @@ if ($action == "attempt")
 	$auto = $_GET['auto'];
 	$object = $_GET['object'];
 	$safe_box = $_GET['safe_box'];
+	if (!empty($_SESSION['result'][$safe_box]))
+	{
+		$DB_Attempt = new DB_Attempt($g_DB['host'], $g_DB['dbname'], $g_DB['user'], $g_DB['pass']);
+		$object_result = $DB_Attempt->get_object_result($_SESSION['result'][$safe_box], $safe_box);
+		echo json_encode(['auto' => $auto,
+							'object' => $object_result,
+							'pin' => $_SESSION['result'][$safe_box],
+							'attempt' => $_SESSION['objs'][$object_result]['attempt'],
+							'result' => true]);
+		return ;
+	}
 	if (empty($auto) || $auto == "false")
 		$pin = $_GET['pin'];
 	else
 	{
-		$DB_Attempt = new DB_Attempt($g_DB['host'], $g_DB['dbname'], $g_DB['user'], $g_DB['pass']);
+		if (empty($DB_Attempt))
+			$DB_Attempt = new DB_Attempt($g_DB['host'], $g_DB['dbname'], $g_DB['user'], $g_DB['pass']);
 		do
 		{
 			$pin = rand(0, 9999);
