@@ -1,0 +1,27 @@
+{
+  "name": "Safe-cracking",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Kllaster/Safe-cracking.git"
+  },
+  "author": "Artem Neumann (noityt@mail.ru)",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Kllaster/Safe-cracking/issues"
+  },
+  "homepage": "https://github.com/Kllaster/Safe-cracking#readme",
+  "devDependencies": {
+    "gulp": "^4.0.2",
+    "gulp-autoprefixer": "^7.0.1",
+    "gulp-clean-css": "^4.3.0",
+    "gulp-concat": "^2.6.1",
+    "gulp-sass": "^4.1.0",
+    "gulp-uglify-es": "^2.0.0"
+  }
+}
