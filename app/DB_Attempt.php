@@ -6,7 +6,7 @@ class DB_Attempt extends DataBase
 	{
 		return (bool)self::$db->query("CREATE TABLE IF NOT EXISTS `attempt_pins` (	
 											`id` INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
-											`object` INT,
+											`robber` INT,
 											`pin` VARCHAR(4),
 											`safe_box` INT,
 											`result` BOOL,
@@ -18,7 +18,7 @@ class DB_Attempt extends DataBase
 	{
 		if (empty($sid = session_id()))
 			return array();
-		$select = self::$db->prepare("SELECT `object`, `pin`, `result` FROM `attempt_pins`
+		$select = self::$db->prepare("SELECT `robber`, `pin`, `result` FROM `attempt_pins`
 											WHERE `safe_box` = :safe_box AND `session_id` = :session_id
 										  	ORDER BY `id` DESC LIMIT $limit;");
 		$select->bindParam(':safe_box', $safe_box);
@@ -29,13 +29,13 @@ class DB_Attempt extends DataBase
 		return ($result);
 	}
 
-	function add(int $object, string $pin, int $safe_box, bool $result): bool
+	function add(int $robber_id, string $pin, int $safe_box, bool $result): bool
 	{
 		if (empty($sid = session_id()))
 			return false;
-		$insert = self::$db->prepare("INSERT INTO `attempt_pins` (`id`, `object`, `pin`, `safe_box`, `result`, `session_id`) 
-                                                            VALUES ('', :object, :pin, :safe_box, :result, :session_id);");
-		$insert->bindParam(':object', $object);
+		$insert = self::$db->prepare("INSERT INTO `attempt_pins` (`id`, `robber`, `pin`, `safe_box`, `result`, `session_id`) 
+                                                            VALUES ('', :robber, :pin, :safe_box, :result, :session_id);");
+		$insert->bindParam(':robber', $robber_id);
 		$insert->bindParam(':pin', $pin);
 		$insert->bindParam(':safe_box', $safe_box);
 		$insert->bindParam(':result', $result);
@@ -57,17 +57,17 @@ class DB_Attempt extends DataBase
 		return (bool)($select->fetchAll());
 	}
 
-	function get_object_result(string $pin, int $safe_box): int
+	function get_robber_result(string $pin, int $safe_box): int
 	{
 		if (empty($sid = session_id()))
 			return false;
-		$select = self::$db->prepare("SELECT `object` FROM `attempt_pins`
+		$select = self::$db->prepare("SELECT `robber` FROM `attempt_pins`
 											WHERE `safe_box` = :safe_box AND `pin` = :pin AND 
 											      `session_id` = :session_id;");
 		$select->bindParam(':pin', $pin);
 		$select->bindParam(':safe_box', $safe_box);
 		$select->bindParam(':session_id', $sid);
 		$select->execute();
-		return (int)($select->fetchAll()[0]['object']);
+		return (int)($select->fetchAll()[0]['robber']);
 	}
 }

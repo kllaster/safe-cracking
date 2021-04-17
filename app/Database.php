@@ -18,8 +18,7 @@ class DataBase
 
 		if (empty(self::$db)) {
 			try {
-				self::$db = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8mb4",
-					$user, $pass, $opt);
+				self::$db = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8mb4", $user, $pass, $opt);
 				self::$db->query("SET collation_connection = 'utf8_general_ci';");
 			} catch (PDOException $e) {
 				create_log("Ошибка при установке соединения с бд\n".$e->getMessage(), 'php_errors');

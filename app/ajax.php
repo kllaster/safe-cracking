@@ -3,9 +3,10 @@
 require_once '../config.php';
 require_once 'Database.php';
 require_once 'DB_Attempt.php';
+require_once 'Robber.php';
 require_once 'utils.php';
 
-global $g_DB, $g_safe;
+global $g_DB, $g_max_attempt;
 
 $action = $_GET['action'];
 if (empty($action))
@@ -13,79 +14,47 @@ if (empty($action))
 if ($action == "attempt")
 {
 	$auto = $_GET['auto'];
-	$object = $_GET['object'];
-	$safe_box = $_GET['safe_box'];
-	if (!empty($_SESSION['result'][$safe_box]))
+	$robber_id = $_GET['robber'];
+	$id_safe = $_GET['safe_box'];
+	$Bank = $_SESSION['Bank'];
+	$Robber = $_SESSION['robbers'][$robber_id];
+	$Robber = Robber::re_create($Robber);
+	if (empty($Bank) || empty($Robber) || ($SafeBox = $Bank->get($id_safe)) == false)
+		return ;
+	if ($SafeBox->opened == true)
 	{
 		$DB_Attempt = new DB_Attempt($g_DB['host'], $g_DB['dbname'], $g_DB['user'], $g_DB['pass']);
-		$object_result = $DB_Attempt->get_object_result($_SESSION['result'][$safe_box], $safe_box);
+		$robber_id = $DB_Attempt->get_robber_result($SafeBox->pin, $SafeBox->id);
+		$Robber = $_SESSION['robbers'][$robber_id];
 		echo json_encode(['auto' => $auto,
-							'object' => $object_result,
-							'pin' => $_SESSION['result'][$safe_box],
-							'attempt' => $_SESSION['objs'][$object_result]['attempt'],
+							'robber' => $Robber->id,
+							'pin' => $_SESSION['result'][$SafeBox->id],
+							'attempt' => $Robber->attempt,
 							'result' => true]);
 		return ;
 	}
-	if (empty($auto) || $auto == "false")
+	if ($auto == "true")
+		$pin = $Robber->get_auto_pin($SafeBox);
+	else
 		$pin = $_GET['pin'];
-	else
+	$SafeBox->opened = $Robber->safe_cracking($SafeBox, $pin);
+	$DB_Attempt = new DB_Attempt($g_DB['host'], $g_DB['dbname'], $g_DB['user'], $g_DB['pass']);
+	if ($DB_Attempt->add($robber_id, $pin, $SafeBox->id, $SafeBox->opened))
 	{
-		if (empty($DB_Attempt))
-			$DB_Attempt = new DB_Attempt($g_DB['host'], $g_DB['dbname'], $g_DB['user'], $g_DB['pass']);
-		do
-		{
-			$pin = rand(0, 9999);
-			$pin = sprintf("%04d", $pin);
-		}
-		while ($DB_Attempt->check_pin($pin, $safe_box) == true);
-	}
-	if (!isset($pin) || !isset($object) || !isset($safe_box))
-		return ;
-	$result = false;
-	if ($g_safe[$safe_box] == $pin)
-	{
-		$_SESSION['result'][$safe_box] = $pin;
-		$result = true;
-	}
-	$lock = 0;
-	$lock_ses = $_SESSION['objs'][$object]['lock'];
-	if (!empty($lock_ses))
-	{
-		if ($lock_ses > time())
-		{
-			$_SESSION['objs'][$object]['lock'] += 60;
-			$lock = $_SESSION['objs'][$object]['lock'] - time();
-		}
-		else
-		{
-			$_SESSION['objs'][$object]['lock'] = 0;
-			$_SESSION['objs'][$object]['attempt'] = 0;
-		}
-	}
-	else
-	{
-		$_SESSION['objs'][$object]['attempt'] += 1;
-		if ($_SESSION['objs'][$object]['attempt'] >= 10)
-		{
-			$_SESSION['objs'][$object]['lock'] = time() + 60;
-			$lock = 60;
-		}
-	}
-	if (empty($DB_Attempt))
-		$DB_Attempt = new DB_Attempt($g_DB['host'], $g_DB['dbname'], $g_DB['user'], $g_DB['pass']);
-	if ($DB_Attempt->add($object, $pin, $safe_box, $result))
 		echo json_encode(['auto' => $auto,
-							'lock' => $lock,
-							'object' => $object,
+							'lock' => $Robber->lock ? $Robber->lock - time() : 0,
+							'robber' => $robber_id,
 							'pin' => $pin,
-							'attempt' => $_SESSION['objs'][$object]['attempt'],
-							'result' => $result]);
+							'attempt' => $Robber->attempt,
+							'result' => $SafeBox->opened]);
+		$_SESSION['robbers'][$robber_id] = $Robber;
+	}
 }
 else if ($action == "add_object")
 {
 	$key = 1;
-	if (!empty($_SESSION['objs']))
-		$key = array_key_last($_SESSION['objs']) + 1;
-	$_SESSION['objs'][$key]['attempt'] = 0;
+	if (!empty($_SESSION['robbers']))
+		$key = array_key_last($_SESSION['robbers']) + 1;
+	$_SESSION['robbers'][$key] = new Robber($g_max_attempt);
 	echo json_encode(['key' => $key]);
 }
